@@ -5,14 +5,10 @@ import lombok.*;
 
 import java.time.Instant;
 
-// records every status change so we have a full audit trail of the order lifecycle
+// records every status change for audit trail
 @Entity
 @Table(name = "order_history")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class OrderHistory {
 
     @Id
@@ -31,7 +27,6 @@ public class OrderHistory {
     @Column(nullable = false)
     private OrderStatus toStatus;
 
-    // who triggered the change (email, system, etc.)
     @Column(nullable = false)
     private String changedBy;
 

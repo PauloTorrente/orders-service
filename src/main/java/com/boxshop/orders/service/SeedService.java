@@ -20,31 +20,25 @@ public class SeedService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    // creates an order, advances it to the desired status, then backdates it
     @Transactional
     public void createBackdatedOrder(SeedOrderRequest req) {
-        // step 1: create the order normally (gets createdAt = now)
+        // create normally, advance status, then backdate via native SQL
         OrderResponse created = orderService.createOrder(
-                new CreateOrderRequest(req.customerEmail(), req.items())
-        );
+                new CreateOrderRequest(req.customerEmail(), req.items()));
         Long orderId = created.id();
 
-        // step 2: advance through the status machine to reach targetStatus
         for (OrderStatus s : pathTo(req.targetStatus())) {
             orderService.updateStatus(orderId, new UpdateStatusRequest(s, "seed"));
         }
 
-        // step 3: backdate created_at and updated_at via native SQL
         entityManager.createNativeQuery(
-                "UPDATE orders SET created_at = ?, updated_at = ? WHERE id = ?"
-        )
-        .setParameter(1, Timestamp.from(req.createdAt()))
-        .setParameter(2, Timestamp.from(req.createdAt()))
-        .setParameter(3, orderId)
-        .executeUpdate();
+                "UPDATE orders SET created_at = ?, updated_at = ? WHERE id = ?")
+                .setParameter(1, Timestamp.from(req.createdAt()))
+                .setParameter(2, Timestamp.from(req.createdAt()))
+                .setParameter(3, orderId)
+                .executeUpdate();
     }
 
-    // returns the sequence of statuses needed to reach the target
     private OrderStatus[] pathTo(OrderStatus target) {
         return switch (target) {
             case CONFIRMED  -> new OrderStatus[]{ OrderStatus.CONFIRMED };

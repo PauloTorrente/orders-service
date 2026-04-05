@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 
-// Spring Data generates the SQL for these methods based on the method name
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
@@ -18,11 +17,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 
-    // custom JPQL query to count orders by status
     @Query("SELECT COUNT(o) FROM Order o WHERE o.status = :status")
     long countByStatus(OrderStatus status);
 
-    // total revenue across all delivered orders (the only real money)
+    // total revenue from delivered orders only
     @Query("SELECT COALESCE(SUM(o.total), 0) FROM Order o WHERE o.status = 'DELIVERED'")
     BigDecimal sumTotalRevenue();
 }

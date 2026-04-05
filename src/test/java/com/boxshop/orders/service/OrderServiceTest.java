@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-// Mockito replaces real repositories with fakes so tests don't touch the database
+// Mockito replaces real repos so tests don't hit the database
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderService unit tests")
 class OrderServiceTest {
@@ -36,31 +36,22 @@ class OrderServiceTest {
 
     private Product product;
 
-    // sets up a reusable product before each test
     @BeforeEach
     void setUp() {
         product = Product.builder()
-                .id(1L)
-                .name("Camiseta Básica")
-                .sku("CAM-001")
-                .price(new BigDecimal("49.90"))
-                .stockQuantity(10)
+                .id(1L).name("Test Shirt").sku("TSH-001")
+                .price(new BigDecimal("49.90")).stockQuantity(10)
                 .build();
     }
 
     @Test
-    @DisplayName("createOrder: should create order and decrease stock")
+    @DisplayName("createOrder: creates order and decreases stock")
     void shouldCreateOrderAndDecreaseStock() {
         var request = new CreateOrderRequest("customer@test.com",
                 List.of(new OrderItemRequest(1L, 2)));
 
-        Order savedOrder = Order.builder()
-                .id(1L)
-                .customerEmail("customer@test.com")
-                .items(new ArrayList<>())
-                .total(BigDecimal.ZERO)
-                .status(OrderStatus.PENDING)
-                .build();
+        Order savedOrder = Order.builder().id(1L).customerEmail("customer@test.com")
+                .items(new ArrayList<>()).total(BigDecimal.ZERO).status(OrderStatus.PENDING).build();
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.save(any())).thenReturn(product);
@@ -70,16 +61,14 @@ class OrderServiceTest {
 
         assertThat(response).isNotNull();
         assertThat(response.customerEmail()).isEqualTo("customer@test.com");
-        // confirms stock was actually saved after decreasing
         verify(productRepository, times(1)).save(product);
     }
 
     @Test
-    @DisplayName("createOrder: should throw when product not found")
+    @DisplayName("createOrder: throws 404 when product not found")
     void shouldThrowWhenProductNotFound() {
         var request = new CreateOrderRequest("customer@test.com",
                 List.of(new OrderItemRequest(99L, 1)));
-
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> orderService.createOrder(request))
@@ -88,12 +77,11 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("createOrder: should throw when insufficient stock")
+    @DisplayName("createOrder: throws 422 when stock insufficient")
     void shouldThrowWhenInsufficientStock() {
         product.setStockQuantity(1);
         var request = new CreateOrderRequest("customer@test.com",
                 List.of(new OrderItemRequest(1L, 5)));
-
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
         assertThatThrownBy(() -> orderService.createOrder(request))
@@ -102,15 +90,9 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("updateStatus: should reject invalid status transition")
+    @DisplayName("updateStatus: rejects invalid transition")
     void shouldRejectInvalidStatusTransition() {
-        // DELIVERED is a terminal state, can't transition from it
-        Order order = Order.builder()
-                .id(1L)
-                .status(OrderStatus.DELIVERED)
-                .items(new ArrayList<>())
-                .build();
-
+        Order order = Order.builder().id(1L).status(OrderStatus.DELIVERED).items(new ArrayList<>()).build();
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> orderService.updateStatus(1L, new UpdateStatusRequest(OrderStatus.CANCELLED, "system")))
@@ -119,20 +101,14 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("updateStatus: cancelling order should restore stock")
+    @DisplayName("updateStatus: cancelling restores stock")
     void shouldRestoreStockWhenCancelled() {
-        Order order = Order.builder()
-                .id(1L)
-                .status(OrderStatus.PENDING)
-                .items(new ArrayList<>())
-                .total(BigDecimal.ZERO)
-                .build();
-
+        Order order = Order.builder().id(1L).status(OrderStatus.PENDING)
+                .items(new ArrayList<>()).total(BigDecimal.ZERO).build();
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any())).thenReturn(order);
 
         var response = orderService.updateStatus(1L, new UpdateStatusRequest(OrderStatus.CANCELLED, "system"));
-
         assertThat(response).isNotNull();
     }
 }

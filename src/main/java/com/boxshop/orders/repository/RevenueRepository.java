@@ -41,8 +41,7 @@ public interface RevenueRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o.status, COUNT(o) FROM Order o WHERE o.createdAt BETWEEN :from AND :to GROUP BY o.status")
     List<Object[]> countByEachStatus(Instant from, Instant to);
 
-    // groups delivered order revenue by calendar day for the timeline chart
-    // CAST(x AS LocalDate) is Hibernate 6 JPQL syntax — works with H2 and PostgreSQL
+    // one row per day — powers the stock chart in the frontend
     @Query("""
         SELECT CAST(o.createdAt AS LocalDate),
                COUNT(o),

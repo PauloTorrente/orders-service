@@ -15,13 +15,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findBySku(String sku);
 
-    // used to check for duplicate SKUs before saving a new product
+    // used to prevent duplicate SKUs before creating a product
     boolean existsBySku(String sku);
 
-    // returns products below the threshold sorted by lowest stock first
+    // sorted by lowest stock first
     @Query("SELECT p FROM Product p WHERE p.stockQuantity <= :threshold ORDER BY p.stockQuantity ASC")
     List<Product> findLowStockProducts(int threshold);
 
-    // case-insensitive partial search on product name
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 }

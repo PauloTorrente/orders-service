@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// catches exceptions across all controllers and returns structured error responses
+// catches exceptions across all controllers and maps them to structured error responses
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    // collects all validation errors from the request body into a map
+    // collects all field validation errors into a map
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
@@ -41,7 +41,6 @@ public class GlobalExceptionHandler {
                         fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "Invalid value",
                         (a, b) -> a
                 ));
-
         var pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
         pd.setType(URI.create("https://api.boxshop.com/errors/validation"));
         pd.setProperty("timestamp", Instant.now());

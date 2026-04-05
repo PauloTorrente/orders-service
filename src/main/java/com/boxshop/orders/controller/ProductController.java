@@ -36,9 +36,9 @@ public class ProductController {
         return ResponseEntity.ok(productService.findById(id));
     }
 
-    // optional name filter: GET /products?name=camiseta
+    // optional ?name= filter
     @GetMapping
-    @Operation(summary = "List products with optional name filter (paginated)")
+    @Operation(summary = "List products (paginated)")
     public Page<ProductResponse> listProducts(
             @RequestParam(required = false) String name,
             @PageableDefault(size = 20) Pageable pageable
@@ -47,7 +47,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/stock")
-    @Operation(summary = "Update product stock quantity")
+    @Operation(summary = "Update product stock")
     public ResponseEntity<ProductResponse> updateStock(
             @PathVariable Long id,
             @Valid @RequestBody UpdateStockRequest request
@@ -55,9 +55,9 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateStock(id, request));
     }
 
-    // returns products with 5 or fewer units in stock
+    // products with 5 or fewer units
     @GetMapping("/low-stock-alerts")
-    @Operation(summary = "Get products with stock below threshold (≤5 units)")
+    @Operation(summary = "Get products with low stock (≤5 units)")
     public List<ProductResponse> getLowStockAlerts() {
         return productService.getLowStockAlerts();
     }

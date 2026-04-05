@@ -8,11 +8,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "products")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Product {
 
     @Id
@@ -31,7 +27,6 @@ public class Product {
     @Column(nullable = false)
     private Integer stockQuantity;
 
-    // unique product identifier used for lookups
     @Column(nullable = false)
     private String sku;
 
@@ -51,12 +46,11 @@ public class Product {
         this.updatedAt = Instant.now();
     }
 
-    // checks if there's enough stock before placing an order
     public boolean hasStock(int quantity) {
         return this.stockQuantity >= quantity;
     }
 
-    // throws if stock is not enough, otherwise subtracts the quantity
+    // throws if not enough stock, otherwise subtracts
     public void decreaseStock(int quantity) {
         if (!hasStock(quantity)) {
             throw new IllegalStateException(
@@ -67,7 +61,7 @@ public class Product {
         this.stockQuantity -= quantity;
     }
 
-    // used when an order is cancelled to give stock back
+    // used when an order is cancelled to restore stock
     public void increaseStock(int quantity) {
         this.stockQuantity += quantity;
     }

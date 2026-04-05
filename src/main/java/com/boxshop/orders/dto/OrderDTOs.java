@@ -8,17 +8,14 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-// groups all order-related request and response records in one place
 public class OrderDTOs {
-
-    // request records (what the client sends)
 
     public record CreateOrderRequest(
             @NotBlank(message = "Customer email is required")
             @Email(message = "Invalid email format")
             String customerEmail,
 
-            // @Valid makes Spring also validate each item inside the list
+            // @Valid cascades validation into each item in the list
             @NotEmpty(message = "Order must have at least one item")
             @Valid
             List<OrderItemRequest> items
@@ -36,11 +33,9 @@ public class OrderDTOs {
             @NotNull(message = "Status is required")
             OrderStatus status,
 
-            // who triggered the change — optional, defaults to "system"
+            // optional — defaults to "system" if not provided
             String changedBy
     ) {}
-
-    // response records (what the API returns)
 
     public record OrderResponse(
             Long id,
@@ -60,7 +55,7 @@ public class OrderDTOs {
             BigDecimal subtotal
     ) {}
 
-    // lighter version used in list endpoints to avoid loading all item details
+    // lighter version used in list endpoints
     public record OrderSummaryResponse(
             Long id,
             String customerEmail,

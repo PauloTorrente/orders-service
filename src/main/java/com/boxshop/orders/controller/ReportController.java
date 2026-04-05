@@ -31,7 +31,7 @@ public class ReportController {
     }
 
     @GetMapping("/revenue/breakdown")
-    @Operation(summary = "Revenue breakdown by order status")
+    @Operation(summary = "Revenue breakdown by status")
     public List<StatusBreakdownItem> breakdown(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
@@ -40,7 +40,7 @@ public class ReportController {
     }
 
     @GetMapping("/revenue/timeline")
-    @Operation(summary = "Daily revenue timeline — powers the stock chart")
+    @Operation(summary = "Daily revenue for the stock chart")
     public List<RevenueTimelineItem> timeline(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
@@ -49,7 +49,7 @@ public class ReportController {
     }
 
     @GetMapping("/top-products")
-    @Operation(summary = "Top products by units sold in delivered orders")
+    @Operation(summary = "Top products by units sold")
     public List<TopProductItem> topProducts(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -59,7 +59,7 @@ public class ReportController {
     }
 
     @GetMapping("/funnel")
-    @Operation(summary = "Order count per status for conversion funnel")
+    @Operation(summary = "Order count per status for the conversion funnel")
     public List<FunnelItem> funnel(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
@@ -68,7 +68,7 @@ public class ReportController {
     }
 
     @GetMapping("/orders/{id}/history")
-    @Operation(summary = "Full audit trail for an order")
+    @Operation(summary = "Full status change history for an order")
     public List<OrderHistoryResponse> orderHistory(@PathVariable Long id) {
         return reportService.orderHistory(id);
     }

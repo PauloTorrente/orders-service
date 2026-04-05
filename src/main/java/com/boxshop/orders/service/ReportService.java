@@ -26,7 +26,6 @@ public class ReportService {
         long delivered = revenueRepository.countByPeriodAndStatus(from, to, OrderStatus.DELIVERED);
         long cancelled = revenueRepository.countByPeriodAndStatus(from, to, OrderStatus.CANCELLED);
         BigDecimal revenue = revenueRepository.sumRevenueByPeriod(from, to);
-
         BigDecimal avg = delivered > 0
                 ? revenue.divide(BigDecimal.valueOf(delivered), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
@@ -37,11 +36,7 @@ public class ReportService {
     @Transactional(readOnly = true)
     public List<StatusBreakdownItem> statusBreakdown(Instant from, Instant to) {
         return revenueRepository.revenueBreakdownByStatus(from, to).stream()
-                .map(row -> new StatusBreakdownItem(
-                        row[0].toString(),
-                        (Long) row[1],
-                        (BigDecimal) row[2]
-                ))
+                .map(row -> new StatusBreakdownItem(row[0].toString(), (Long) row[1], (BigDecimal) row[2]))
                 .toList();
     }
 
@@ -49,12 +44,8 @@ public class ReportService {
     public List<OrderHistoryResponse> orderHistory(Long orderId) {
         return orderHistoryRepository.findByOrderIdOrderByChangedAtAsc(orderId).stream()
                 .map(h -> new OrderHistoryResponse(
-                        h.getId(),
-                        h.getFromStatus().name(),
-                        h.getToStatus().name(),
-                        h.getChangedBy(),
-                        h.getChangedAt()
-                ))
+                        h.getId(), h.getFromStatus().name(), h.getToStatus().name(),
+                        h.getChangedBy(), h.getChangedAt()))
                 .toList();
     }
 
@@ -63,12 +54,8 @@ public class ReportService {
         return revenueRepository.topProductsByUnitsSold(from, to).stream()
                 .limit(limit)
                 .map(row -> new TopProductItem(
-                        (Long) row[0],
-                        (String) row[1],
-                        (String) row[2],
-                        (Long) row[3],
-                        (BigDecimal) row[4]
-                ))
+                        (Long) row[0], (String) row[1], (String) row[2],
+                        (Long) row[3], (BigDecimal) row[4]))
                 .toList();
     }
 
@@ -79,15 +66,11 @@ public class ReportService {
                 .toList();
     }
 
-    // returns one entry per day with revenue and order count — powers the stock chart
+    // powers the stock-style chart — one data point per day
     @Transactional(readOnly = true)
     public List<RevenueTimelineItem> revenueTimeline(Instant from, Instant to) {
         return revenueRepository.revenueTimeline(from, to).stream()
-                .map(row -> new RevenueTimelineItem(
-                        row[0].toString(),   // LocalDate → "2026-02-01"
-                        (Long) row[1],
-                        (BigDecimal) row[2]
-                ))
+                .map(row -> new RevenueTimelineItem(row[0].toString(), (Long) row[1], (BigDecimal) row[2]))
                 .toList();
     }
 }

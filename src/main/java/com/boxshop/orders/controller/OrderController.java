@@ -23,10 +23,9 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // returns 201 Created instead of 200 when a new order is placed
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new order", description = "Creates an order and decreases stock for each item")
+    @Operation(summary = "Create a new order")
     public OrderResponse createOrder(@Valid @RequestBody CreateOrderRequest request) {
         return orderService.createOrder(request);
     }
@@ -37,31 +36,29 @@ public class OrderController {
         return ResponseEntity.ok(orderService.findById(id));
     }
 
-    // supports filtering by email or status, and adds X-Total-Revenue to the response headers
+    // filters by customerEmail or status if provided; adds X-Total-Revenue header
     @GetMapping
-    @Operation(summary = "List all orders (paginated) with X-Total-Revenue header")
+    @Operation(summary = "List orders (paginated)")
     public ResponseEntity<Page<OrderSummaryResponse>> listOrders(
             @RequestParam(required = false) String customerEmail,
             @RequestParam(required = false) OrderStatus status,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
     ) {
         Page<OrderSummaryResponse> page;
-        if (customerEmail != null) page = orderService.listByCustomer(customerEmail, pageable);
-        else if (status != null)   page = orderService.listByStatus(status, pageable);
-        else                       page = orderService.listOrders(pageable);
+        if (customerEmail != null)   page = orderService.listByCustomer(customerEmail, pageable);
+        else if (status != null)     page = orderService.listByStatus(status, pageable);
+        else                         page = orderService.listOrders(pageable);
 
-        // expose total revenue in header so the frontend can show it without a separate request
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Revenue",   orderService.totalRevenue().toPlainString());
-        headers.add("X-Total-Orders",    String.valueOf(page.getTotalElements()));
+        headers.add("X-Total-Revenue", orderService.totalRevenue().toPlainString());
+        headers.add("X-Total-Orders",  String.valueOf(page.getTotalElements()));
         headers.add("Access-Control-Expose-Headers", "X-Total-Revenue,X-Total-Orders");
 
         return ResponseEntity.ok().headers(headers).body(page);
     }
 
-    // PATCH because we're only changing one field, not replacing the whole resource
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Update order status", description = "Validates allowed status transitions. Cancelling an order restores stock.")
+    @Operation(summary = "Update order status")
     public ResponseEntity<OrderResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateStatusRequest request

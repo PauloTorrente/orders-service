@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// dev-only controller — creates backdated orders for demo/seed purposes
-// in a real production app this would be behind an admin auth guard
+// dev-only — creates backdated orders for demo data
 @RestController
 @RequestMapping("/api/v1/seed")
 @RequiredArgsConstructor
@@ -21,7 +20,7 @@ public class SeedController {
     private final SeedService seedService;
 
     @PostMapping("/order")
-    @Operation(summary = "Create a backdated order (dev only)")
+    @Operation(summary = "Create a single backdated order")
     public ResponseEntity<Void> seedOrder(@RequestBody SeedOrderRequest request) {
         seedService.createBackdatedOrder(request);
         return ResponseEntity.ok().build();

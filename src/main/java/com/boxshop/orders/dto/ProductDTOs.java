@@ -5,10 +5,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-// groups all product-related request and response records in one place
 public class ProductDTOs {
-
-    // request records (what the client sends)
 
     public record CreateProductRequest(
             @NotBlank(message = "Product name is required")
@@ -36,7 +33,6 @@ public class ProductDTOs {
             Integer stockQuantity
     ) {}
 
-    // response record (what the API returns)
     public record ProductResponse(
             Long id,
             String name,

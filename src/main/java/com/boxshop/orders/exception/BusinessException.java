@@ -1,6 +1,6 @@
 package com.boxshop.orders.exception;
 
-// thrown when a business rule is violated, triggers a 422 response
+// 422 Unprocessable Entity
 public class BusinessException extends RuntimeException {
     public BusinessException(String message) {
         super(message);

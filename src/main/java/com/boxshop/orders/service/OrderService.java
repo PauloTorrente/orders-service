@@ -34,11 +34,9 @@ public class OrderService {
                 .build();
 
         for (OrderItemRequest itemReq : request.items()) {
-            // throws 404 if product doesn't exist
             Product product = productRepository.findById(itemReq.productId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product", itemReq.productId()));
 
-            // throws 422 if there's not enough stock
             if (!product.hasStock(itemReq.quantity())) {
                 throw new BusinessException(
                     "Insufficient stock for product '" + product.getName() +
@@ -49,17 +47,14 @@ public class OrderService {
             product.decreaseStock(itemReq.quantity());
             productRepository.save(product);
 
-            OrderItem item = OrderItem.builder()
+            order.addItem(OrderItem.builder()
                     .product(product)
                     .quantity(itemReq.quantity())
                     .unitPrice(product.getPrice())
-                    .build();
-
-            order.addItem(item);
+                    .build());
         }
 
-        Order saved = orderRepository.save(order);
-        return toResponse(saved);
+        return toResponse(orderRepository.save(order));
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +79,7 @@ public class OrderService {
         return orderRepository.findByStatus(status, pageable).map(this::toSummary);
     }
 
-    // used by the controller to attach X-Total-Revenue to the list response header
+    // used by the controller to populate the X-Total-Revenue header
     @Transactional(readOnly = true)
     public BigDecimal totalRevenue() {
         return orderRepository.sumTotalRevenue();
@@ -99,7 +94,7 @@ public class OrderService {
         validateStatusTransition(previous, request.status());
         order.setStatus(request.status());
 
-        // if the order is cancelled, give stock back to each product
+        // give stock back when cancelled
         if (request.status() == OrderStatus.CANCELLED) {
             order.getItems().forEach(item -> {
                 item.getProduct().increaseStock(item.getQuantity());
@@ -109,7 +104,7 @@ public class OrderService {
 
         Order saved = orderRepository.save(order);
 
-        // record this status change in the audit history
+        // save audit entry
         orderHistoryRepository.save(OrderHistory.builder()
                 .order(saved)
                 .fromStatus(previous)
@@ -120,7 +115,6 @@ public class OrderService {
         return toResponse(saved);
     }
 
-    // only allows valid transitions, e.g. PENDING -> CONFIRMED but not DELIVERED -> CANCELLED
     private void validateStatusTransition(OrderStatus current, OrderStatus next) {
         boolean valid = switch (current) {
             case PENDING    -> next == OrderStatus.CONFIRMED || next == OrderStatus.CANCELLED;
@@ -131,13 +125,10 @@ public class OrderService {
         };
 
         if (!valid) {
-            throw new BusinessException(
-                "Invalid status transition from " + current + " to " + next
-            );
+            throw new BusinessException("Invalid status transition from " + current + " to " + next);
         }
     }
 
-    // converts Order entity to full response with items
     private OrderResponse toResponse(Order order) {
         List<OrderItemResponse> items = order.getItems().stream()
                 .map(i -> new OrderItemResponse(
@@ -150,25 +141,15 @@ public class OrderService {
                 .toList();
 
         return new OrderResponse(
-                order.getId(),
-                order.getCustomerEmail(),
-                order.getStatus(),
-                items,
-                order.getTotal(),
-                order.getCreatedAt(),
-                order.getUpdatedAt()
+                order.getId(), order.getCustomerEmail(), order.getStatus(),
+                items, order.getTotal(), order.getCreatedAt(), order.getUpdatedAt()
         );
     }
 
-    // lighter version used in list endpoints
     private OrderSummaryResponse toSummary(Order order) {
         return new OrderSummaryResponse(
-                order.getId(),
-                order.getCustomerEmail(),
-                order.getStatus(),
-                order.getTotal(),
-                order.getItems().size(),
-                order.getCreatedAt()
+                order.getId(), order.getCustomerEmail(), order.getStatus(),
+                order.getTotal(), order.getItems().size(), order.getCreatedAt()
         );
     }
 }

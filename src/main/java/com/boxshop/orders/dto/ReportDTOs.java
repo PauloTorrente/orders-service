@@ -42,9 +42,9 @@ public class ReportDTOs {
             long count
     ) {}
 
-    // one data point for the revenue-over-time chart
+    // one data point per day for the revenue chart
     public record RevenueTimelineItem(
-            String date,        // "2026-02-01"
+            String date,
             long orderCount,
             BigDecimal revenue
     ) {}

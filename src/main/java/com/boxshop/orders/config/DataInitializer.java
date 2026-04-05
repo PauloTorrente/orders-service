@@ -16,11 +16,10 @@ import java.util.List;
 @Slf4j
 public class DataInitializer {
 
-    // runs once on startup to populate the database with sample products
+    // seeds 5 sample products on first startup if the table is empty
     @Bean
     CommandLineRunner seedData(ProductRepository productRepository) {
         return args -> {
-            // skip seeding if data already exists
             if (productRepository.count() > 0) return;
 
             List<Product> products = List.of(
@@ -33,7 +32,7 @@ public class DataInitializer {
 
             productRepository.saveAll(products);
             log.info("✅ Sample products seeded: {} items", products.size());
-            log.info("🚀 Swagger UI available at http://localhost:8080/swagger-ui.html");
+            log.info("🚀 Swagger UI: http://localhost:8080/swagger-ui.html");
         };
     }
 }

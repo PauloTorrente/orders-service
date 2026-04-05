@@ -6,7 +6,7 @@ import java.util.List;
 
 public class SeedDTOs {
 
-    // used only by the seed endpoint to create backdated orders for demo data
+    // creates a backdated order for demo/seed purposes
     public record SeedOrderRequest(
             String customerEmail,
             List<OrderDTOs.OrderItemRequest> items,

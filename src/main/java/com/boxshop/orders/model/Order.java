@@ -10,11 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Order {
 
     @Id
@@ -28,7 +24,7 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status;
 
-    // cascade = ALL means saving/deleting an order also affects its items
+    // cascade ALL means saving/deleting an order also affects its items
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
@@ -42,7 +38,6 @@ public class Order {
 
     private Instant updatedAt;
 
-    // runs automatically before inserting a new order
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
@@ -50,20 +45,19 @@ public class Order {
         this.status = OrderStatus.PENDING;
     }
 
-    // runs automatically before updating an existing order
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
     }
 
-    // links the item to this order and keeps the total in sync
+    // links the item to this order and recalculates total
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
         recalculateTotal();
     }
 
-    // sums up all items: quantity * unitPrice for each
+    // quantity * unitPrice for each item
     public void recalculateTotal() {
         this.total = items.stream()
                 .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getQuantity())))

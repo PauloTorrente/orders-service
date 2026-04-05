@@ -17,14 +17,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductService {
 
-    // products with stock at or below this value will show in low-stock alerts
+    // products at or below this quantity appear in low-stock alerts
     private static final int LOW_STOCK_THRESHOLD = 5;
 
     private final ProductRepository productRepository;
 
     @Transactional
     public ProductResponse create(CreateProductRequest request) {
-        // SKU must be unique across all products
         if (productRepository.existsBySku(request.sku())) {
             throw new BusinessException("SKU already exists: " + request.sku());
         }
@@ -49,7 +48,6 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Page<ProductResponse> list(String name, Pageable pageable) {
-        // filters by name if provided, otherwise returns everything
         if (name != null && !name.isBlank()) {
             return productRepository.findByNameContainingIgnoreCase(name, pageable).map(this::toResponse);
         }
@@ -60,7 +58,6 @@ public class ProductService {
     public ProductResponse updateStock(Long id, UpdateStockRequest request) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
-
         product.setStockQuantity(request.stockQuantity());
         return toResponse(productRepository.save(product));
     }
@@ -68,21 +65,13 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<ProductResponse> getLowStockAlerts() {
         return productRepository.findLowStockProducts(LOW_STOCK_THRESHOLD)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+                .stream().map(this::toResponse).toList();
     }
 
-    // converts Product entity to response DTO
     private ProductResponse toResponse(Product p) {
         return new ProductResponse(
-                p.getId(),
-                p.getName(),
-                p.getDescription(),
-                p.getPrice(),
-                p.getStockQuantity(),
-                p.getSku(),
-                p.getCreatedAt()
+                p.getId(), p.getName(), p.getDescription(),
+                p.getPrice(), p.getStockQuantity(), p.getSku(), p.getCreatedAt()
         );
     }
 }
