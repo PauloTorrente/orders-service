@@ -11,10 +11,10 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.nuvemshop</groupId>
+    <groupId>com.boxshop</groupId>
     <artifactId>orders-service</artifactId>
     <version>1.0.0</version>
-    <description>Order and Inventory Management API - Nuvemshop Challenge</description>
+    <description>Order and Inventory Management API - boxshop Challenge</description>
 
     <properties>
         <java.version>21</java.version>

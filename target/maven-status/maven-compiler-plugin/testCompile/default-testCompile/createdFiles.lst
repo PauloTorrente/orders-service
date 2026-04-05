@@ -1,1 +1,2 @@
-com/nuvemshop/orders/service/OrderServiceTest.class
+com/boxshop/orders/service/OrderServiceTest.class
+com/boxshop/orders/controller/OrderControllerIntegrationTest.class

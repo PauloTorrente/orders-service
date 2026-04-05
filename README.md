@@ -1,6 +1,6 @@
-# 🛒 Nuvemshop Orders Service
+# 🛒 boxshop Orders Service
 
-> **Portfolio project** — RESTful API for e-commerce order and inventory management, built as a technical challenge for Nuvemshop.
+> **Portfolio project** — RESTful API for e-commerce order and inventory management, built as a technical challenge for boxshop.
 
 ---
 
@@ -62,8 +62,8 @@ Every e-commerce platform needs reliable order management. This service handles:
 **Prerequisites:** Java 21+, Maven 3.9+
 
 ```bash
-git clone https://github.com/your-username/nuvemshop-orders-service.git
-cd nuvemshop-orders-service
+git clone https://github.com/your-username/boxshop-orders-service.git
+cd boxshop-orders-service
 mvn spring-boot:run
 ```
 
@@ -165,7 +165,7 @@ spring.h2.console.enabled=false
 
 ```
 src/
-├── main/java/com/nuvemshop/orders/
+├── main/java/com/boxshop/orders/
 │   ├── controller/      # REST endpoints (thin layer)
 │   ├── service/         # Business logic & rules
 │   ├── repository/      # JPA data access
