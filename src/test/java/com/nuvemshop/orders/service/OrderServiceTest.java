@@ -113,7 +113,7 @@ class OrderServiceTest {
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        assertThatThrownBy(() -> orderService.updateStatus(1L, new UpdateStatusRequest(OrderStatus.CANCELLED)))
+        assertThatThrownBy(() -> orderService.updateStatus(1L, new UpdateStatusRequest(OrderStatus.CANCELLED, "system")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Invalid status transition");
     }
@@ -131,7 +131,7 @@ class OrderServiceTest {
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any())).thenReturn(order);
 
-        var response = orderService.updateStatus(1L, new UpdateStatusRequest(OrderStatus.CANCELLED));
+        var response = orderService.updateStatus(1L, new UpdateStatusRequest(OrderStatus.CANCELLED, "system"));
 
         assertThat(response).isNotNull();
     }
