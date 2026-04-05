@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -66,11 +66,30 @@ public class ReportService {
                 .toList();
     }
 
-    // powers the stock-style chart — one data point per day
+    // daily revenue for delivered orders — line chart
     @Transactional(readOnly = true)
     public List<RevenueTimelineItem> revenueTimeline(Instant from, Instant to) {
         return revenueRepository.revenueTimeline(from, to).stream()
                 .map(row -> new RevenueTimelineItem(row[0].toString(), (Long) row[1], (BigDecimal) row[2]))
+                .toList();
+    }
+
+    // daily order counts grouped by status — stacked bar chart
+    @Transactional(readOnly = true)
+    public List<OrdersTimelineItem> ordersTimeline(Instant from, Instant to) {
+        List<Object[]> rows = revenueRepository.ordersTimelineByStatus(from, to);
+
+        // group rows by date, building a map of status -> count per day
+        Map<String, Map<String, Long>> byDate = new LinkedHashMap<>();
+        for (Object[] row : rows) {
+            String date   = row[0].toString();
+            String status = row[1].toString();
+            Long   count  = (Long) row[2];
+            byDate.computeIfAbsent(date, k -> new LinkedHashMap<>()).put(status, count);
+        }
+
+        return byDate.entrySet().stream()
+                .map(e -> new OrdersTimelineItem(e.getKey(), e.getValue()))
                 .toList();
     }
 }

@@ -41,7 +41,7 @@ public interface RevenueRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o.status, COUNT(o) FROM Order o WHERE o.createdAt BETWEEN :from AND :to GROUP BY o.status")
     List<Object[]> countByEachStatus(Instant from, Instant to);
 
-    // one row per day — powers the stock chart in the frontend
+    // daily revenue for delivered orders — powers the line chart
     @Query("""
         SELECT CAST(o.createdAt AS LocalDate),
                COUNT(o),
@@ -53,4 +53,16 @@ public interface RevenueRepository extends JpaRepository<Order, Long> {
         ORDER BY CAST(o.createdAt AS LocalDate)
         """)
     List<Object[]> revenueTimeline(Instant from, Instant to);
+
+    // daily count for ALL statuses — powers the status bar chart
+    @Query("""
+        SELECT CAST(o.createdAt AS LocalDate),
+               o.status,
+               COUNT(o)
+        FROM Order o
+        WHERE o.createdAt BETWEEN :from AND :to
+        GROUP BY CAST(o.createdAt AS LocalDate), o.status
+        ORDER BY CAST(o.createdAt AS LocalDate)
+        """)
+    List<Object[]> ordersTimelineByStatus(Instant from, Instant to);
 }

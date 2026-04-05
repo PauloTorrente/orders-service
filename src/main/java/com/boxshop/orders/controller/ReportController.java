@@ -40,12 +40,22 @@ public class ReportController {
     }
 
     @GetMapping("/revenue/timeline")
-    @Operation(summary = "Daily revenue for the stock chart")
-    public List<RevenueTimelineItem> timeline(
+    @Operation(summary = "Daily delivered revenue for the line chart")
+    public List<RevenueTimelineItem> revenueTimeline(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
         return reportService.revenueTimeline(toInstant(from), toInstant(to.plusDays(1)));
+    }
+
+    // daily order counts for ALL statuses — powers the status stacked bar chart
+    @GetMapping("/orders/timeline")
+    @Operation(summary = "Daily order counts by status for the stacked bar chart")
+    public List<OrdersTimelineItem> ordersTimeline(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        return reportService.ordersTimeline(toInstant(from), toInstant(to.plusDays(1)));
     }
 
     @GetMapping("/top-products")
