@@ -34,7 +34,10 @@ public class OrderDTOs {
 
     public record UpdateStatusRequest(
             @NotNull(message = "Status is required")
-            OrderStatus status
+            OrderStatus status,
+
+            // who triggered the change — optional, defaults to "system"
+            String changedBy
     ) {}
 
     // response records (what the API returns)

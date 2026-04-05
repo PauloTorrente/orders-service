@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,17 +37,26 @@ public class OrderController {
         return ResponseEntity.ok(orderService.findById(id));
     }
 
-    // supports filtering by email or status via query params
+    // supports filtering by email or status, and adds X-Total-Revenue to the response headers
     @GetMapping
-    @Operation(summary = "List all orders (paginated)")
-    public Page<OrderSummaryResponse> listOrders(
+    @Operation(summary = "List all orders (paginated) with X-Total-Revenue header")
+    public ResponseEntity<Page<OrderSummaryResponse>> listOrders(
             @RequestParam(required = false) String customerEmail,
             @RequestParam(required = false) OrderStatus status,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
     ) {
-        if (customerEmail != null) return orderService.listByCustomer(customerEmail, pageable);
-        if (status != null) return orderService.listByStatus(status, pageable);
-        return orderService.listOrders(pageable);
+        Page<OrderSummaryResponse> page;
+        if (customerEmail != null) page = orderService.listByCustomer(customerEmail, pageable);
+        else if (status != null)   page = orderService.listByStatus(status, pageable);
+        else                       page = orderService.listOrders(pageable);
+
+        // expose total revenue in header so the frontend can show it without a separate request
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Revenue",   orderService.totalRevenue().toPlainString());
+        headers.add("X-Total-Orders",    String.valueOf(page.getTotalElements()));
+        headers.add("Access-Control-Expose-Headers", "X-Total-Revenue,X-Total-Orders");
+
+        return ResponseEntity.ok().headers(headers).body(page);
     }
 
     // PATCH because we're only changing one field, not replacing the whole resource

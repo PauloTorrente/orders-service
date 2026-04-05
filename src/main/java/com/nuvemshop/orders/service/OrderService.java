@@ -4,6 +4,7 @@ import com.nuvemshop.orders.dto.OrderDTOs.*;
 import com.nuvemshop.orders.exception.BusinessException;
 import com.nuvemshop.orders.exception.ResourceNotFoundException;
 import com.nuvemshop.orders.model.*;
+import com.nuvemshop.orders.repository.OrderHistoryRepository;
 import com.nuvemshop.orders.repository.OrderRepository;
 import com.nuvemshop.orders.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final OrderHistoryRepository orderHistoryRepository;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
@@ -82,12 +84,19 @@ public class OrderService {
         return orderRepository.findByStatus(status, pageable).map(this::toSummary);
     }
 
+    // used by the controller to attach X-Total-Revenue to the list response header
+    @Transactional(readOnly = true)
+    public BigDecimal totalRevenue() {
+        return orderRepository.sumTotalRevenue();
+    }
+
     @Transactional
     public OrderResponse updateStatus(Long id, UpdateStatusRequest request) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", id));
 
-        validateStatusTransition(order.getStatus(), request.status());
+        OrderStatus previous = order.getStatus();
+        validateStatusTransition(previous, request.status());
         order.setStatus(request.status());
 
         // if the order is cancelled, give stock back to each product
@@ -98,7 +107,17 @@ public class OrderService {
             });
         }
 
-        return toResponse(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+
+        // record this status change in the audit history
+        orderHistoryRepository.save(OrderHistory.builder()
+                .order(saved)
+                .fromStatus(previous)
+                .toStatus(request.status())
+                .changedBy(request.changedBy() != null ? request.changedBy() : "system")
+                .build());
+
+        return toResponse(saved);
     }
 
     // only allows valid transitions, e.g. PENDING -> CONFIRMED but not DELIVERED -> CANCELLED
