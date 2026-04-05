@@ -21,35 +21,59 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    // GET /api/v1/reports/revenue?from=2024-01-01&to=2024-12-31
     @GetMapping("/revenue")
-    @Operation(summary = "Revenue report by period", description = "Aggregates total revenue, order count and average ticket for a date range")
+    @Operation(summary = "Revenue summary for a date range")
     public RevenueReportResponse revenueReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
-        // convert LocalDate to Instant (start of day and end of day UTC)
-        Instant fromInstant = from.atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant toInstant   = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
-        return reportService.revenueReport(fromInstant, toInstant);
+        return reportService.revenueReport(toInstant(from), toInstant(to.plusDays(1)));
     }
 
-    // GET /api/v1/reports/revenue/breakdown?from=2024-01-01&to=2024-12-31
     @GetMapping("/revenue/breakdown")
     @Operation(summary = "Revenue breakdown by order status")
     public List<StatusBreakdownItem> breakdown(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
-        Instant fromInstant = from.atStartOfDay(ZoneOffset.UTC).toInstant();
-        Instant toInstant   = to.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
-        return reportService.statusBreakdown(fromInstant, toInstant);
+        return reportService.statusBreakdown(toInstant(from), toInstant(to.plusDays(1)));
     }
 
-    // GET /api/v1/reports/orders/{id}/history
+    @GetMapping("/revenue/timeline")
+    @Operation(summary = "Daily revenue timeline — powers the stock chart")
+    public List<RevenueTimelineItem> timeline(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        return reportService.revenueTimeline(toInstant(from), toInstant(to.plusDays(1)));
+    }
+
+    @GetMapping("/top-products")
+    @Operation(summary = "Top products by units sold in delivered orders")
+    public List<TopProductItem> topProducts(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "8") int limit
+    ) {
+        return reportService.topProducts(toInstant(from), toInstant(to.plusDays(1)), limit);
+    }
+
+    @GetMapping("/funnel")
+    @Operation(summary = "Order count per status for conversion funnel")
+    public List<FunnelItem> funnel(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        return reportService.funnel(toInstant(from), toInstant(to.plusDays(1)));
+    }
+
     @GetMapping("/orders/{id}/history")
-    @Operation(summary = "Full audit trail of status changes for an order")
+    @Operation(summary = "Full audit trail for an order")
     public List<OrderHistoryResponse> orderHistory(@PathVariable Long id) {
         return reportService.orderHistory(id);
+    }
+
+    private Instant toInstant(LocalDate d) {
+        return d.atStartOfDay(ZoneOffset.UTC).toInstant();
     }
 }
