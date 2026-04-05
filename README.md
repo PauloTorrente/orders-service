@@ -179,4 +179,4 @@ src/
 
 ---
 
-*Made with ☕ and Java 21 — [Paulo] — 2025*
+*Made with ☕ and Java 21 — [Paulo] — 2026*
